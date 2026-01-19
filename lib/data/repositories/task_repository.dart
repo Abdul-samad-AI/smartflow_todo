@@ -1,20 +1,23 @@
+import 'package:hive/hive.dart';
 import '../models/task_model.dart';
 
 class TaskRepository {
-  static final List<TaskModel> _tasks = [];
+  static final Box<TaskModel> _taskBox =
+      Hive.box<TaskModel>('tasksBox');
 
   static List<TaskModel> getTasks() {
-    return _tasks;
+    return _taskBox.values.toList();
   }
 
-  static void addTask(TaskModel task) {
-    _tasks.add(task);
+  static Future<void> addTask(TaskModel task) async {
+    await _taskBox.put(task.id, task);
   }
 
-  static void updateTask(TaskModel updatedTask) {
-    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
-    if (index != -1) {
-      _tasks[index] = updatedTask;
-    }
+  static Future<void> updateTask(TaskModel task) async {
+    await task.save();
+  }
+
+  static Future<void> deleteTask(TaskModel task) async {
+    await task.delete();
   }
 }

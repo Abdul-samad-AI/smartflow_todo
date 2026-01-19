@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme/app_theme.dart';
+import 'data/models/task_model.dart';
 import 'presentation/screens/task_list_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+
+  Hive.registerAdapter(TaskPriorityAdapter());
+  Hive.registerAdapter(TaskDifficultyAdapter());
+  Hive.registerAdapter(TaskModelAdapter());
+
+  await Hive.openBox<TaskModel>('tasksBox');
+
   runApp(const SmartFlowApp());
 }
 

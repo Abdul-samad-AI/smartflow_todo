@@ -1,13 +1,48 @@
-enum TaskPriority { low, medium, high }
-enum TaskDifficulty { easy, normal, hard }
+import 'package:hive/hive.dart';
 
-class TaskModel {
+part 'task_model.g.dart';
+
+@HiveType(typeId: 0)
+enum TaskPriority {
+  @HiveField(0)
+  low,
+  @HiveField(1)
+  medium,
+  @HiveField(2)
+  high,
+}
+
+@HiveType(typeId: 1)
+enum TaskDifficulty {
+  @HiveField(0)
+  easy,
+  @HiveField(1)
+  normal,
+  @HiveField(2)
+  hard,
+}
+
+@HiveType(typeId: 2)
+class TaskModel extends HiveObject {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String title;
+
+  @HiveField(2)
   final String description;
+
+  @HiveField(3)
   final TaskPriority priority;
+
+  @HiveField(4)
   final TaskDifficulty difficulty;
+
+  @HiveField(5)
   final DateTime createdAt;
+
+  @HiveField(6)
   final bool isCompleted;
 
   TaskModel({
@@ -20,9 +55,7 @@ class TaskModel {
     this.isCompleted = false,
   });
 
-  TaskModel copyWith({
-    bool? isCompleted,
-  }) {
+  TaskModel copyWith({bool? isCompleted}) {
     return TaskModel(
       id: id,
       title: title,

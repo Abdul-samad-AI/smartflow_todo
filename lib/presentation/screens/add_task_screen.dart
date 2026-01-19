@@ -25,7 +25,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     super.dispose();
   }
 
-  void _saveTask() {
+  /// Saves task to Hive via repository
+  Future<void> _saveTask() async {
     if (_titleController.text.trim().isEmpty) {
       return;
     }
@@ -39,9 +40,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       createdAt: DateTime.now(),
     );
 
-    TaskRepository.addTask(task);
+    await TaskRepository.addTask(task);
 
-    // return true so task list refreshes
+    // Return true so TaskListScreen refreshes
     Navigator.pop(context, true);
   }
 
@@ -55,6 +56,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Task title
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -62,7 +64,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 12),
+
+            // Description
             TextField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -71,6 +76,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               maxLines: 3,
             ),
+
             const SizedBox(height: 20),
 
             // Priority selector
@@ -119,6 +125,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
             const Spacer(),
 
+            // Save button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
