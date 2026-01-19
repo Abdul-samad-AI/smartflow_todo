@@ -1,55 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'focus_screen.dart';
+
 import 'add_task_screen.dart';
+import 'focus_screen.dart';
+
 import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
-import '../../features/analytics/productivity_service.dart';
 import '../../features/analytics/mood_model.dart';
 import '../../features/analytics/mood_provider.dart';
-import '../../features/analytics/mood_suggestion_service.dart';
 
-enum SortType { time, priority, completed }
-
-class TaskListScreen extends ConsumerStatefulWidget {
+class TaskListScreen extends ConsumerWidget {
   const TaskListScreen({super.key});
 
-  @override
-  ConsumerState<TaskListScreen> createState() => _TaskListScreenState();
-}
-
-class _TaskListScreenState extends ConsumerState<TaskListScreen> {
-  SortType _currentSort = SortType.time;
-  bool _ascending = false;
-
-  // 🔹 Sorting logic (PURE UI LOGIC)
-  List<TaskModel> _sortedTasks(List<TaskModel> tasks) {
-    final sorted = List<TaskModel>.from(tasks);
-
-    switch (_currentSort) {
-      case SortType.time:
-        sorted.sort((a, b) => _ascending
-            ? a.createdAt.compareTo(b.createdAt)
-            : b.createdAt.compareTo(a.createdAt));
-        break;
-
-      case SortType.priority:
-        sorted.sort((a, b) => _ascending
-            ? a.priority.index.compareTo(b.priority.index)
-            : b.priority.index.compareTo(a.priority.index));
-        break;
-
-      case SortType.completed:
-        sorted.sort((a, b) => _ascending
-            ? a.isCompleted.toString().compareTo(b.isCompleted.toString())
-            : b.isCompleted.toString().compareTo(a.isCompleted.toString()));
-        break;
-    }
-
-    return sorted;
-  }
-
-  Color _priorityColor(TaskPriority priority) {
+  // 🎨 Priority text color (existing behavior)
+  Color _priorityTextColor(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.high:
         return Colors.redAccent;
@@ -60,162 +24,109 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     }
   }
 
-  String _sortLabel() {
-    switch (_currentSort) {
-      case SortType.time:
-        return 'Time';
-      case SortType.priority:
-        return 'Priority';
-      case SortType.completed:
-        return 'Completed';
+  // 🧠 Check if task matches current mood
+  bool _matchesMood(TaskModel task, UserMood mood) {
+    switch (mood) {
+      case UserMood.tired:
+        return task.priority == TaskPriority.low &&
+            task.difficulty == TaskDifficulty.easy;
+      case UserMood.normal:
+        return task.priority == TaskPriority.medium &&
+            task.difficulty == TaskDifficulty.normal;
+      case UserMood.energetic:
+        return task.priority == TaskPriority.high &&
+            task.difficulty == TaskDifficulty.hard;
     }
   }
 
+  // 🎨 Soft background highlight based on mood
+  Color _moodHighlightColor(UserMood mood, BuildContext context) {
+    switch (mood) {
+      case UserMood.tired:
+        return Colors.green.withOpacity(0.12);
+      case UserMood.normal:
+        return Colors.blue.withOpacity(0.12);
+      case UserMood.energetic:
+        return Colors.red.withOpacity(0.12);
+    }
+  }
+
+  // 🔁 Reorder tasks: matching mood tasks first
+  List<TaskModel> _reorderTasksByMood(
+    List<TaskModel> tasks,
+    UserMood mood,
+  ) {
+    final matching =
+        tasks.where((t) => _matchesMood(t, mood)).toList();
+    final others =
+        tasks.where((t) => !_matchesMood(t, mood)).toList();
+
+    return [...matching, ...others];
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final tasks = ref.watch(taskProvider);
-    final sortedTasks = _sortedTasks(tasks);
-    final score = ProductivityService.calculateDailyScore(tasks);
+  Widget build(BuildContext context, WidgetRef ref) {
     final mood = ref.watch(moodProvider);
-    final suggestedTasks = MoodSuggestionService.suggestTasks(
-       tasks: tasks,
-       mood: mood,
-     );
+    final tasks = ref.watch(taskProvider);
+
+    final reorderedTasks = _reorderTasksByMood(tasks, mood);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('SmartFlow Tasks'),
-        
         actions: [
           IconButton(
-             icon: const Icon(Icons.timer),
-             onPressed: () {
-               Navigator.push(
-                 context,
-                 MaterialPageRoute(
-                   builder: (_) => const FocusScreen(),
-                 ),
-               );
-             },
-           ),
-          PopupMenuButton<SortType>(
-            icon: const Icon(Icons.sort),
-            onSelected: (value) {
-              setState(() {
-                _currentSort = value;
-              });
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: SortType.time,
-                child: Text('Sort by Time'),
-              ),
-              PopupMenuItem(
-                value: SortType.priority,
-                child: Text('Sort by Priority'),
-              ),
-              PopupMenuItem(
-                value: SortType.completed,
-                child: Text('Sort by Completed'),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: Icon(
-              _ascending ? Icons.arrow_upward : Icons.arrow_downward,
-            ),
+            icon: const Icon(Icons.timer),
             onPressed: () {
-              setState(() {
-                _ascending = !_ascending;
-              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const FocusScreen(),
+                ),
+              );
             },
           ),
         ],
       ),
+
       body: Column(
         children: [
-          Padding( 
-            padding: const EdgeInsets.all(8),
+          // 🙂 MOOD SELECTOR
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ChoiceChip(
                   label: const Text('😴 Tired'),
                   selected: mood == UserMood.tired,
-                  onSelected: (_) =>
-                      ref.read(moodProvider.notifier).state = UserMood.tired,
+                  onSelected: (_) => ref
+                      .read(moodProvider.notifier)
+                      .state = UserMood.tired,
                 ),
                 ChoiceChip(
                   label: const Text('🙂 Normal'),
                   selected: mood == UserMood.normal,
-                  onSelected: (_) =>
-                      ref.read(moodProvider.notifier).state = UserMood.normal,
+                  onSelected: (_) => ref
+                      .read(moodProvider.notifier)
+                      .state = UserMood.normal,
                 ),
                 ChoiceChip(
                   label: const Text('🚀 Energetic'),
                   selected: mood == UserMood.energetic,
-                  onSelected: (_) =>
-                      ref.read(moodProvider.notifier).state = UserMood.energetic,
+                  onSelected: (_) => ref
+                      .read(moodProvider.notifier)
+                      .state = UserMood.energetic,
                 ),
               ],
             ),
           ),
-          
-          // 🔹 Productivity Score
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primaryContainer,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Today’s Productivity Score',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: score / 100,
-                  minHeight: 10,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$score / 100 • Sorted by ${_sortLabel()}',
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-            
-          if (suggestedTasks.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Suggested for you',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  ...suggestedTasks.map(
-                    (task) => Card(
-                      child: ListTile(
-                        title: Text(task.title),
-                        subtitle: Text(
-                          '${task.priority.name.toUpperCase()} • ${task.difficulty.name.toUpperCase()}',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
+          const Divider(),
 
-          // 🔹 Task List
+          // 📋 TASK LIST
           Expanded(
-            child: tasks.isEmpty
+            child: reorderedTasks.isEmpty
                 ? const Center(
                     child: Text(
                       'No tasks yet 👀\nTap + to add one',
@@ -224,35 +135,43 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: sortedTasks.length,
+                    itemCount: reorderedTasks.length,
                     itemBuilder: (context, index) {
-                      final task = sortedTasks[index];
-                      return ListTile(
-                        leading: Checkbox(
-                          value: task.isCompleted,
-                          onChanged: (_) {
-                            ref
-                                .read(taskProvider.notifier)
-                                .toggleComplete(task);
-                          },
+                      final task = reorderedTasks[index];
+                      final matchesMood =
+                          _matchesMood(task, mood);
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: matchesMood
+                              ? _moodHighlightColor(mood, context)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        title: Text(
-                          task.title,
-                          style: TextStyle(
-                            decoration: task.isCompleted
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                            color: task.isCompleted
-                                ? Colors.grey
-                                : _priorityColor(task.priority),
+                        child: ListTile(
+                          leading: Checkbox(
+                            value: task.isCompleted,
+                            onChanged: (_) {
+                              ref
+                                  .read(taskProvider.notifier)
+                                  .toggleComplete(task);
+                            },
                           ),
-                        ),
-                        subtitle: Text(
-                          '${task.priority.name.toUpperCase()} • ${task.difficulty.name.toUpperCase()}',
-                          style: TextStyle(
-                            decoration: task.isCompleted
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
+                          title: Text(
+                            task.title,
+                            style: TextStyle(
+                              decoration: task.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                              color: task.isCompleted
+                                  ? Colors.grey
+                                  : _priorityTextColor(task.priority),
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${task.priority.name.toUpperCase()} • ${task.difficulty.name.toUpperCase()}',
                           ),
                         ),
                       );
@@ -261,6 +180,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
