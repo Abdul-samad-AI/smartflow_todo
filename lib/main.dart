@@ -3,6 +3,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/task_model.dart';
 import 'presentation/screens/task_list_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +17,12 @@ void main() async {
 
   await Hive.openBox<TaskModel>('tasksBox');
 
-  runApp(const SmartFlowApp());
+  runApp(
+  const ProviderScope(
+    child: SmartFlowApp(),
+      ),
+    );
+
 }
 
 class SmartFlowApp extends StatelessWidget {

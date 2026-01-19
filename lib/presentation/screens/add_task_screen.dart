@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data/models/task_model.dart';
-import '../../data/repositories/task_repository.dart';
+import '../../features/tasks/task_provider.dart';
 
-class AddTaskScreen extends StatefulWidget {
+class AddTaskScreen extends ConsumerStatefulWidget {
   const AddTaskScreen({super.key});
 
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  ConsumerState<AddTaskScreen> createState() => _AddTaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -25,11 +26,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     super.dispose();
   }
 
-  /// Saves task to Hive via repository
   Future<void> _saveTask() async {
-    if (_titleController.text.trim().isEmpty) {
-      return;
-    }
+    if (_titleController.text.trim().isEmpty) return;
 
     final task = TaskModel(
       id: const Uuid().v4(),
@@ -40,10 +38,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       createdAt: DateTime.now(),
     );
 
-    await TaskRepository.addTask(task);
+    // ✅ Riverpod handles everything
+    await ref.read(taskProvider.notifier).addTask(task);
 
-    // Return true so TaskListScreen refreshes
-    Navigator.pop(context, true);
+    Navigator.pop(context);
   }
 
   @override
@@ -56,7 +54,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Task title
+            // Task Title
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -79,7 +77,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
             const SizedBox(height: 20),
 
-            // Priority selector
+            // Priority
             DropdownButtonFormField<TaskPriority>(
               value: _priority,
               decoration: const InputDecoration(
@@ -94,15 +92,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               }).toList(),
               onChanged: (value) {
                 if (value == null) return;
-                setState(() {
-                  _priority = value;
-                });
+                setState(() => _priority = value);
               },
             ),
 
             const SizedBox(height: 16),
 
-            // Difficulty selector
+            // Difficulty
             DropdownButtonFormField<TaskDifficulty>(
               value: _difficulty,
               decoration: const InputDecoration(
@@ -117,15 +113,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               }).toList(),
               onChanged: (value) {
                 if (value == null) return;
-                setState(() {
-                  _difficulty = value;
-                });
+                setState(() => _difficulty = value);
               },
             ),
 
             const Spacer(),
 
-            // Save button
+            // Save Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
