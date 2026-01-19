@@ -4,12 +4,24 @@ import 'core/theme/app_theme.dart';
 import 'data/models/task_model.dart';
 import 'presentation/screens/task_list_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+
+final FlutterLocalNotificationsPlugin notificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
+  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+   const initSettings = InitializationSettings(
+    android: androidSettings,
+   );
+
+await notificationsPlugin.initialize(initSettings);
+
 
   Hive.registerAdapter(TaskPriorityAdapter());
   Hive.registerAdapter(TaskDifficultyAdapter());

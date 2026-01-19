@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'focus_screen.dart';
 import 'add_task_screen.dart';
 import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
@@ -77,7 +77,19 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('SmartFlow Tasks'),
+        
         actions: [
+          IconButton(
+             icon: const Icon(Icons.timer),
+             onPressed: () {
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(
+                   builder: (_) => const FocusScreen(),
+                 ),
+               );
+             },
+           ),
           PopupMenuButton<SortType>(
             icon: const Icon(Icons.sort),
             onSelected: (value) {
