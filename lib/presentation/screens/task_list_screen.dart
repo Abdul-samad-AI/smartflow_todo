@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'add_task_screen.dart';
 import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
 import '../../features/analytics/productivity_service.dart';
-
 
 enum SortType { time, priority, completed }
 
@@ -19,6 +19,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   SortType _currentSort = SortType.time;
   bool _ascending = false;
 
+  // 🔹 Sorting logic (PURE UI LOGIC)
   List<TaskModel> _sortedTasks(List<TaskModel> tasks) {
     final sorted = List<TaskModel>.from(tasks);
 
@@ -53,6 +54,17 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         return Colors.orangeAccent;
       case TaskPriority.low:
         return Colors.green;
+    }
+  }
+
+  String _sortLabel() {
+    switch (_currentSort) {
+      case SortType.time:
+        return 'Time';
+      case SortType.priority:
+        return 'Priority';
+      case SortType.completed:
+        return 'Completed';
     }
   }
 
@@ -101,71 +113,81 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         ],
       ),
       body: Column(
-  children: [
-    Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Theme.of(context).colorScheme.primaryContainer,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Today’s Productivity Score',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          // 🔹 Productivity Score
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Today’s Productivity Score',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: score / 100,
+                  minHeight: 10,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$score / 100 • Sorted by ${_sortLabel()}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: score / 100,
-            minHeight: 10,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$score / 100',
-            style: const TextStyle(fontSize: 14),
+
+          // 🔹 Task List
+          Expanded(
+            child: tasks.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No tasks yet 👀\nTap + to add one',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: sortedTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = sortedTasks[index];
+                      return ListTile(
+                        leading: Checkbox(
+                          value: task.isCompleted,
+                          onChanged: (_) {
+                            ref
+                                .read(taskProvider.notifier)
+                                .toggleComplete(task);
+                          },
+                        ),
+                        title: Text(
+                          task.title,
+                          style: TextStyle(
+                            decoration: task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                            color: task.isCompleted
+                                ? Colors.grey
+                                : _priorityColor(task.priority),
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${task.priority.name.toUpperCase()} • ${task.difficulty.name.toUpperCase()}',
+                          style: TextStyle(
+                            decoration: task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
-    ),
-    Expanded(
-      child: tasks.isEmpty
-          ? const Center(
-              child: Text(
-                'No tasks yet 👀\nTap + to add one',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18),
-              ),
-            )
-          : ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-                return ListTile(
-                  leading: Checkbox(
-                    value: task.isCompleted,
-                    onChanged: (_) {
-                      ref
-                          .read(taskProvider.notifier)
-                          .toggleComplete(task);
-                    },
-                  ),
-                  title: Text(
-                    task.title,
-                    style: TextStyle(
-                      decoration: task.isCompleted
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${task.priority.name.toUpperCase()} • ${task.difficulty.name.toUpperCase()}',
-                  ),
-                );
-              },
-            ),
-    ),
-  ],
-),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
