@@ -8,11 +8,25 @@ import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
 import '../../features/analytics/mood_model.dart';
 import '../../features/analytics/mood_provider.dart';
+import '../../features/analytics/productivity_service.dart';
 
-class TaskListScreen extends ConsumerWidget {
+enum SortType { time, priority, completed }
+
+class TaskListScreen extends ConsumerStatefulWidget {
   const TaskListScreen({super.key});
 
-  // 🎨 Priority text color (existing behavior)
+  @override
+  ConsumerState<TaskListScreen> createState() =>
+      _TaskListScreenState();
+}
+
+class _TaskListScreenState
+    extends ConsumerState<TaskListScreen> {
+  SortType _sortType = SortType.time;
+  bool _ascending = false;
+
+  // ---------- HELPERS ----------
+
   Color _priorityTextColor(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.high:
@@ -24,7 +38,6 @@ class TaskListScreen extends ConsumerWidget {
     }
   }
 
-  // 🧠 Check if task matches current mood
   bool _matchesMood(TaskModel task, UserMood mood) {
     switch (mood) {
       case UserMood.tired:
@@ -39,8 +52,7 @@ class TaskListScreen extends ConsumerWidget {
     }
   }
 
-  // 🎨 Soft background highlight based on mood
-  Color _moodHighlightColor(UserMood mood, BuildContext context) {
+  Color _moodHighlightColor(UserMood mood) {
     switch (mood) {
       case UserMood.tired:
         return Colors.green.withOpacity(0.12);
@@ -51,30 +63,95 @@ class TaskListScreen extends ConsumerWidget {
     }
   }
 
-  // 🔁 Reorder tasks: matching mood tasks first
-  List<TaskModel> _reorderTasksByMood(
+  List<TaskModel> _applySorting(
     List<TaskModel> tasks,
     UserMood mood,
   ) {
+    // 1️⃣ Mood-based prioritization
     final matching =
         tasks.where((t) => _matchesMood(t, mood)).toList();
     final others =
         tasks.where((t) => !_matchesMood(t, mood)).toList();
 
-    return [...matching, ...others];
+    List<TaskModel> result = [...matching, ...others];
+
+    // 2️⃣ Sorting
+    switch (_sortType) {
+      case SortType.time:
+        result.sort((a, b) => _ascending
+            ? a.createdAt.compareTo(b.createdAt)
+            : b.createdAt.compareTo(a.createdAt));
+        break;
+      case SortType.priority:
+        result.sort((a, b) => _ascending
+            ? a.priority.index.compareTo(b.priority.index)
+            : b.priority.index.compareTo(a.priority.index));
+        break;
+      case SortType.completed:
+        result.sort((a, b) => _ascending
+            ? a.isCompleted.toString().compareTo(b.isCompleted.toString())
+            : b.isCompleted
+                .toString()
+                .compareTo(a.isCompleted.toString()));
+        break;
+    }
+
+    return result;
   }
 
+  // ---------- UI ----------
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final mood = ref.watch(moodProvider);
     final tasks = ref.watch(taskProvider);
+    final score =
+        ProductivityService.calculateDailyScore(tasks);
 
-    final reorderedTasks = _reorderTasksByMood(tasks, mood);
+    final visibleTasks = _applySorting(tasks, mood);
 
     return Scaffold(
+      // ☰ SLIDING DRAWER
+      drawer: Drawer(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Productivity',
+                  style: TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                LinearProgressIndicator(
+                  value: score / 100,
+                  minHeight: 10,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '$score / 100',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  score >= 70
+                      ? '🔥 Excellent focus today'
+                      : score >= 40
+                          ? '👍 Good progress'
+                          : '⚡ Start with small wins',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
       appBar: AppBar(
         title: const Text('SmartFlow Tasks'),
         actions: [
+          // ⏱ Focus Mode
           IconButton(
             icon: const Icon(Icons.timer),
             onPressed: () {
@@ -84,6 +161,40 @@ class TaskListScreen extends ConsumerWidget {
                   builder: (_) => const FocusScreen(),
                 ),
               );
+            },
+          ),
+
+          // ↕ SORT MENU (RESTORED)
+          PopupMenuButton<SortType>(
+            icon: const Icon(Icons.sort),
+            onSelected: (value) {
+              setState(() {
+                _sortType = value;
+              });
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: SortType.time,
+                child: Text('Sort by Time'),
+              ),
+              PopupMenuItem(
+                value: SortType.priority,
+                child: Text('Sort by Priority'),
+              ),
+              PopupMenuItem(
+                value: SortType.completed,
+                child: Text('Sort by Completed'),
+              ),
+            ],
+          ),
+
+          IconButton(
+            icon: Icon(
+                _ascending ? Icons.arrow_upward : Icons.arrow_downward),
+            onPressed: () {
+              setState(() {
+                _ascending = !_ascending;
+              });
             },
           ),
         ],
@@ -126,7 +237,7 @@ class TaskListScreen extends ConsumerWidget {
 
           // 📋 TASK LIST
           Expanded(
-            child: reorderedTasks.isEmpty
+            child: visibleTasks.isEmpty
                 ? const Center(
                     child: Text(
                       'No tasks yet 👀\nTap + to add one',
@@ -135,9 +246,9 @@ class TaskListScreen extends ConsumerWidget {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: reorderedTasks.length,
+                    itemCount: visibleTasks.length,
                     itemBuilder: (context, index) {
-                      final task = reorderedTasks[index];
+                      final task = visibleTasks[index];
                       final matchesMood =
                           _matchesMood(task, mood);
 
@@ -146,7 +257,7 @@ class TaskListScreen extends ConsumerWidget {
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: matchesMood
-                              ? _moodHighlightColor(mood, context)
+                              ? _moodHighlightColor(mood)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                         ),
