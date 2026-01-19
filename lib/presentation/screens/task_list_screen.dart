@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_task_screen.dart';
 
 class TaskListScreen extends StatelessWidget {
   const TaskListScreen({super.key});
@@ -17,11 +18,16 @@ class TaskListScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add Task screen will come next
-        },
-        child: const Icon(Icons.add),
+         onPressed: () {
+            Navigator.push(
+             context,
+            MaterialPageRoute(
+                builder: (_) => const AddTaskScreen(),
       ),
+    );
+  },
+  child: const Icon(Icons.add),
+),
     );
   }
 }
