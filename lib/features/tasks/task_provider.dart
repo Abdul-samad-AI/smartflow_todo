@@ -11,10 +11,20 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
   }
 
   Future<void> toggleComplete(TaskModel task) async {
+    // Optimistic UI update
+    state = [
+      for (final t in state)
+        if (t.id == task.id)
+          t.copyWith(isCompleted: !t.isCompleted)
+        else
+          t
+    ];
+
+    // Persist to Hive
     final updated = task.copyWith(isCompleted: !task.isCompleted);
     await TaskRepository.updateTask(updated);
-    state = TaskRepository.getTasks();
-  }
+    }
+
 
   void refresh() {
     state = TaskRepository.getTasks();

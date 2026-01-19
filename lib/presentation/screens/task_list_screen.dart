@@ -6,8 +6,42 @@ import '../../features/tasks/task_provider.dart';
 
 enum SortType { time, priority, completed }
 
-class TaskListScreen extends ConsumerWidget {
+class TaskListScreen extends ConsumerStatefulWidget {
   const TaskListScreen({super.key});
+
+  @override
+  ConsumerState<TaskListScreen> createState() => _TaskListScreenState();
+}
+
+class _TaskListScreenState extends ConsumerState<TaskListScreen> {
+  SortType _currentSort = SortType.time;
+  bool _ascending = false;
+
+  List<TaskModel> _sortedTasks(List<TaskModel> tasks) {
+    final sorted = List<TaskModel>.from(tasks);
+
+    switch (_currentSort) {
+      case SortType.time:
+        sorted.sort((a, b) => _ascending
+            ? a.createdAt.compareTo(b.createdAt)
+            : b.createdAt.compareTo(a.createdAt));
+        break;
+
+      case SortType.priority:
+        sorted.sort((a, b) => _ascending
+            ? a.priority.index.compareTo(b.priority.index)
+            : b.priority.index.compareTo(a.priority.index));
+        break;
+
+      case SortType.completed:
+        sorted.sort((a, b) => _ascending
+            ? a.isCompleted.toString().compareTo(b.isCompleted.toString())
+            : b.isCompleted.toString().compareTo(a.isCompleted.toString()));
+        break;
+    }
+
+    return sorted;
+  }
 
   Color _priorityColor(TaskPriority priority) {
     switch (priority) {
@@ -21,14 +55,49 @@ class TaskListScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tasks = ref.watch(taskProvider);
+    final sortedTasks = _sortedTasks(tasks);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('SmartFlow Tasks'),
+        actions: [
+          PopupMenuButton<SortType>(
+            icon: const Icon(Icons.sort),
+            onSelected: (value) {
+              setState(() {
+                _currentSort = value;
+              });
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: SortType.time,
+                child: Text('Sort by Time'),
+              ),
+              PopupMenuItem(
+                value: SortType.priority,
+                child: Text('Sort by Priority'),
+              ),
+              PopupMenuItem(
+                value: SortType.completed,
+                child: Text('Sort by Completed'),
+              ),
+            ],
+          ),
+          IconButton(
+            icon: Icon(
+              _ascending ? Icons.arrow_upward : Icons.arrow_downward,
+            ),
+            onPressed: () {
+              setState(() {
+                _ascending = !_ascending;
+              });
+            },
+          ),
+        ],
       ),
-      body: tasks.isEmpty
+      body: sortedTasks.isEmpty
           ? const Center(
               child: Text(
                 'No tasks yet 👀\nTap + to add one',
@@ -37,9 +106,10 @@ class TaskListScreen extends ConsumerWidget {
               ),
             )
           : ListView.builder(
-              itemCount: tasks.length,
+              itemCount: sortedTasks.length,
               itemBuilder: (context, index) {
-                final task = tasks[index];
+                final task = sortedTasks[index];
+
                 return ListTile(
                   leading: Checkbox(
                     value: task.isCompleted,
