@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'add_task_screen.dart';
 import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
+import '../../features/analytics/productivity_service.dart';
+
 
 enum SortType { time, priority, completed }
 
@@ -58,6 +60,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   Widget build(BuildContext context) {
     final tasks = ref.watch(taskProvider);
     final sortedTasks = _sortedTasks(tasks);
+    final score = ProductivityService.calculateDailyScore(tasks);
 
     return Scaffold(
       appBar: AppBar(
@@ -97,7 +100,34 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
           ),
         ],
       ),
-      body: sortedTasks.isEmpty
+      body: Column(
+  children: [
+    Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      color: Theme.of(context).colorScheme.primaryContainer,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Today’s Productivity Score',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: score / 100,
+            minHeight: 10,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$score / 100',
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    ),
+    Expanded(
+      child: tasks.isEmpty
           ? const Center(
               child: Text(
                 'No tasks yet 👀\nTap + to add one',
@@ -106,10 +136,9 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               ),
             )
           : ListView.builder(
-              itemCount: sortedTasks.length,
+              itemCount: tasks.length,
               itemBuilder: (context, index) {
-                final task = sortedTasks[index];
-
+                final task = tasks[index];
                 return ListTile(
                   leading: Checkbox(
                     value: task.isCompleted,
@@ -125,9 +154,6 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                       decoration: task.isCompleted
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
-                      color: task.isCompleted
-                          ? Colors.grey
-                          : _priorityColor(task.priority),
                     ),
                   ),
                   subtitle: Text(
@@ -136,6 +162,10 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                 );
               },
             ),
+    ),
+  ],
+),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
