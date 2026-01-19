@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+
 import '../../data/models/task_model.dart';
+import '../../data/repositories/task_repository.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -16,6 +19,33 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   TaskDifficulty _difficulty = TaskDifficulty.normal;
 
   @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _saveTask() {
+    if (_titleController.text.trim().isEmpty) {
+      return;
+    }
+
+    final task = TaskModel(
+      id: const Uuid().v4(),
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      priority: _priority,
+      difficulty: _difficulty,
+      createdAt: DateTime.now(),
+    );
+
+    TaskRepository.addTask(task);
+
+    // return true so task list refreshes
+    Navigator.pop(context, true);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -29,6 +59,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               controller: _titleController,
               decoration: const InputDecoration(
                 labelText: 'Task Title',
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -36,16 +67,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               controller: _descriptionController,
               decoration: const InputDecoration(
                 labelText: 'Description',
+                border: OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
             const SizedBox(height: 20),
 
-            // Priority
+            // Priority selector
             DropdownButtonFormField<TaskPriority>(
               value: _priority,
               decoration: const InputDecoration(
                 labelText: 'Priority',
+                border: OutlineInputBorder(),
               ),
               items: TaskPriority.values.map((priority) {
                 return DropdownMenuItem(
@@ -54,19 +87,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 );
               }).toList(),
               onChanged: (value) {
+                if (value == null) return;
                 setState(() {
-                  _priority = value!;
+                  _priority = value;
                 });
               },
             ),
 
             const SizedBox(height: 16),
 
-            // Difficulty
+            // Difficulty selector
             DropdownButtonFormField<TaskDifficulty>(
               value: _difficulty,
               decoration: const InputDecoration(
                 labelText: 'Difficulty',
+                border: OutlineInputBorder(),
               ),
               items: TaskDifficulty.values.map((difficulty) {
                 return DropdownMenuItem(
@@ -75,20 +110,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 );
               }).toList(),
               onChanged: (value) {
+                if (value == null) return;
                 setState(() {
-                  _difficulty = value!;
+                  _difficulty = value;
                 });
               },
             ),
 
             const Spacer(),
 
-            ElevatedButton(
-              onPressed: () {
-                // Save logic comes next
-                Navigator.pop(context);
-              },
-              child: const Text('Save Task'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveTask,
+                child: const Text('Save Task'),
+              ),
             ),
           ],
         ),
