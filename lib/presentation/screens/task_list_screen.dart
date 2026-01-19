@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../features/analytics/focus_analytics_service.dart';
 import 'add_task_screen.dart';
 import 'focus_screen.dart';
-
 import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
 import '../../features/analytics/mood_model.dart';
@@ -67,7 +66,7 @@ class _TaskListScreenState
     List<TaskModel> tasks,
     UserMood mood,
   ) {
-    // 1️⃣ Mood-based prioritization
+    // 1️ Mood-based prioritization
     final matching =
         tasks.where((t) => _matchesMood(t, mood)).toList();
     final others =
@@ -75,7 +74,7 @@ class _TaskListScreenState
 
     List<TaskModel> result = [...matching, ...others];
 
-    // 2️⃣ Sorting
+    // 2️ Sorting
     switch (_sortType) {
       case SortType.time:
         result.sort((a, b) => _ascending
@@ -120,27 +119,103 @@ class _TaskListScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Productivity',
-                  style: TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+                  'Your Focus Dashboard',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
-                LinearProgressIndicator(
-                  value: score / 100,
-                  minHeight: 10,
+      
+                //  DAILY SCORE CARD
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Today’s Productivity',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+                        LinearProgressIndicator(
+                          value: score / 100,
+                          minHeight: 10,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$score / 100',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  '$score / 100',
-                  style: const TextStyle(fontSize: 16),
+      
+                const SizedBox(height: 20),
+      
+                //  WEEKLY INSIGHTS
+                Builder(
+                  builder: (context) {
+                    final analytics =
+                        FocusAnalyticsService.calculate(tasks);
+      
+                    return Card(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Weekly Focus Insights',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 12),
+      
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                _InsightChip(
+                                    label: 'Completed',
+                                    value: analytics.completed),
+                                _InsightChip(
+                                    label: 'High Priority',
+                                    value: analytics.highPriority),
+                                _InsightChip(
+                                    label: 'Hard Tasks',
+                                    value: analytics.hardTasks),
+                              ],
+                            ),
+      
+                            const SizedBox(height: 16),
+                            Text(
+                              analytics.insight,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  score >= 70
-                      ? '🔥 Excellent focus today'
-                      : score >= 40
-                          ? '👍 Good progress'
-                          : '⚡ Start with small wins',
+      
+                const Spacer(),
+      
+                const Text(
+                  'SmartFlow helps you work with your energy,\nnot against it.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -148,10 +223,11 @@ class _TaskListScreenState
         ),
       ),
 
+
       appBar: AppBar(
         title: const Text('SmartFlow Tasks'),
         actions: [
-          // ⏱ Focus Mode
+          //  Focus Mode
           IconButton(
             icon: const Icon(Icons.timer),
             onPressed: () {
@@ -164,7 +240,7 @@ class _TaskListScreenState
             },
           ),
 
-          // ↕ SORT MENU (RESTORED)
+          //  SORT MENU (RESTORED)
           PopupMenuButton<SortType>(
             icon: const Icon(Icons.sort),
             onSelected: (value) {
@@ -202,7 +278,7 @@ class _TaskListScreenState
 
       body: Column(
         children: [
-          // 🙂 MOOD SELECTOR
+          //  MOOD SELECTOR
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
@@ -235,7 +311,7 @@ class _TaskListScreenState
 
           const Divider(),
 
-          // 📋 TASK LIST
+          //  TASK LIST
           Expanded(
             child: visibleTasks.isEmpty
                 ? const Center(
@@ -303,6 +379,35 @@ class _TaskListScreenState
         },
         child: const Icon(Icons.add),
       ),
+    );
+  }
+}
+// slider analytics
+class _InsightChip extends StatelessWidget {
+  final String label;
+  final int value;
+
+  const _InsightChip({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value.toString(),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
     );
   }
 }
