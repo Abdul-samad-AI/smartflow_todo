@@ -10,4 +10,11 @@ class TaskRepository {
   static void addTask(TaskModel task) {
     _tasks.add(task);
   }
+
+  static void updateTask(TaskModel updatedTask) {
+    final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
+    if (index != -1) {
+      _tasks[index] = updatedTask;
+    }
+  }
 }
