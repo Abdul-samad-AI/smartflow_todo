@@ -5,6 +5,9 @@ import 'add_task_screen.dart';
 import '../../data/models/task_model.dart';
 import '../../features/tasks/task_provider.dart';
 import '../../features/analytics/productivity_service.dart';
+import '../../features/analytics/mood_model.dart';
+import '../../features/analytics/mood_provider.dart';
+import '../../features/analytics/mood_suggestion_service.dart';
 
 enum SortType { time, priority, completed }
 
@@ -73,6 +76,11 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     final tasks = ref.watch(taskProvider);
     final sortedTasks = _sortedTasks(tasks);
     final score = ProductivityService.calculateDailyScore(tasks);
+    final mood = ref.watch(moodProvider);
+    final suggestedTasks = MoodSuggestionService.suggestTasks(
+       tasks: tasks,
+       mood: mood,
+     );
 
     return Scaffold(
       appBar: AppBar(
@@ -126,6 +134,33 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       ),
       body: Column(
         children: [
+          Padding( 
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ChoiceChip(
+                  label: const Text('😴 Tired'),
+                  selected: mood == UserMood.tired,
+                  onSelected: (_) =>
+                      ref.read(moodProvider.notifier).state = UserMood.tired,
+                ),
+                ChoiceChip(
+                  label: const Text('🙂 Normal'),
+                  selected: mood == UserMood.normal,
+                  onSelected: (_) =>
+                      ref.read(moodProvider.notifier).state = UserMood.normal,
+                ),
+                ChoiceChip(
+                  label: const Text('🚀 Energetic'),
+                  selected: mood == UserMood.energetic,
+                  onSelected: (_) =>
+                      ref.read(moodProvider.notifier).state = UserMood.energetic,
+                ),
+              ],
+            ),
+          ),
+          
           // 🔹 Productivity Score
           Container(
             width: double.infinity,
@@ -151,6 +186,32 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               ],
             ),
           ),
+            
+          if (suggestedTasks.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Suggested for you',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ...suggestedTasks.map(
+                    (task) => Card(
+                      child: ListTile(
+                        title: Text(task.title),
+                        subtitle: Text(
+                          '${task.priority.name.toUpperCase()} • ${task.difficulty.name.toUpperCase()}',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
 
           // 🔹 Task List
           Expanded(
