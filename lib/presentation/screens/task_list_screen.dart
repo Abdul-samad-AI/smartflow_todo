@@ -8,6 +8,8 @@ import '../../features/tasks/task_provider.dart';
 import '../../features/analytics/mood_model.dart';
 import '../../features/analytics/mood_provider.dart';
 import '../../features/analytics/productivity_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 enum SortType { time, priority, completed }
 
@@ -208,6 +210,30 @@ class _TaskListScreenState
                         ),
                       ),
                     );
+                  },
+                ),
+                //  LOGOUT BUTTON
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () async {
+                    // 1️ Clear local tasks
+                    await ref.read(taskProvider.notifier).clearAll();
+                
+                    // 2️ Firebase sign out
+                    await FirebaseAuth.instance.signOut();
+                
+                    // 3️ Close drawer
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                    //  Auth state listener will auto-redirect to LoginScreen
                   },
                 ),
       

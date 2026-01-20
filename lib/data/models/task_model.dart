@@ -55,6 +55,7 @@ class TaskModel extends HiveObject {
     this.isCompleted = false,
   });
 
+  // 🔁 Used when toggling completion
   TaskModel copyWith({bool? isCompleted}) {
     return TaskModel(
       id: id,
@@ -64,6 +65,32 @@ class TaskModel extends HiveObject {
       difficulty: difficulty,
       createdAt: createdAt,
       isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+
+  // 🔥 FIRESTORE → JSON
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'priority': priority.name,
+        'difficulty': difficulty.name,
+        'isCompleted': isCompleted,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  // 🔥 JSON → FIRESTORE
+  factory TaskModel.fromJson(Map<String, dynamic> json) {
+    return TaskModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      priority: TaskPriority.values
+          .firstWhere((e) => e.name == json['priority']),
+      difficulty: TaskDifficulty.values
+          .firstWhere((e) => e.name == json['difficulty']),
+      isCompleted: json['isCompleted'] as bool,
+      createdAt: DateTime.parse(json['createdAt']),
     );
   }
 }
