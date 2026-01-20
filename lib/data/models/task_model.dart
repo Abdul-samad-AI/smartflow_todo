@@ -55,7 +55,7 @@ class TaskModel extends HiveObject {
     this.isCompleted = false,
   });
 
-  // 🔁 Used when toggling completion
+  //  Used when toggling completion
   TaskModel copyWith({bool? isCompleted}) {
     return TaskModel(
       id: id,
@@ -68,7 +68,7 @@ class TaskModel extends HiveObject {
     );
   }
 
-  // 🔥 FIRESTORE → JSON
+  //  FIRESTORE → JSON
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
@@ -79,7 +79,7 @@ class TaskModel extends HiveObject {
         'createdAt': createdAt.toIso8601String(),
       };
 
-  // 🔥 JSON → FIRESTORE
+  //  JSON → FIRESTORE
   factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
       id: json['id'] as String,

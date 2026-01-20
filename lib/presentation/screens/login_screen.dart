@@ -17,7 +17,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool isLoading = false;
 
-  // 🔐 LOGIN
+  //  LOGIN
   Future<void> _login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -35,7 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: password,
       );
 
-      // 🔥 SYNC TASKS FROM FIRESTORE AFTER LOGIN
+      //  SYNC TASKS FROM FIRESTORE AFTER LOGIN
       await ref.read(taskProvider.notifier).syncFromCloud();
 
     } catch (e) {
@@ -45,7 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // 📝 REGISTER
+  //  REGISTER
   Future<void> _register() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -68,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: password,
       );
 
-      // 🔥 SYNC TASKS FROM FIRESTORE AFTER REGISTER
+      //  SYNC TASKS FROM FIRESTORE AFTER REGISTER
       await ref.read(taskProvider.notifier).syncFromCloud();
 
     } catch (e) {
@@ -78,7 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // ❗ ERROR SNACKBAR
+  //  ERROR SNACKBAR
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

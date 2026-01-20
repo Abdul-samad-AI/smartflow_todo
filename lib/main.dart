@@ -11,21 +11,21 @@ import 'presentation/screens/task_list_screen.dart';
 import 'firebase_options.dart';
 
 
-/// 🔔 Local Notifications Plugin
+///  Local Notifications Plugin
 final FlutterLocalNotificationsPlugin notificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🟡 1. Initialize Hive (Offline Storage)
+  //  1. Initialize Hive (Offline Storage)
   await Hive.initFlutter();
   Hive.registerAdapter(TaskPriorityAdapter());
   Hive.registerAdapter(TaskDifficultyAdapter());
   Hive.registerAdapter(TaskModelAdapter());
   await Hive.openBox<TaskModel>('tasksBox');
 
-  // 🔔 2. Initialize Local Notifications
+  //  2. Initialize Local Notifications
   const androidSettings =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -35,13 +35,13 @@ Future<void> main() async {
 
   await notificationsPlugin.initialize(notificationSettings);
 
-  // 🔥 3. Initialize Firebase (STEP 6.4 CORE)
+  //  3. Initialize Firebase (STEP 6.4 CORE)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
 
-  // 🚀 4. Run App with Riverpod
+  //  4. Run App with Riverpod
   runApp(
     const ProviderScope(
       child: SmartFlowApp(),

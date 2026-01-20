@@ -44,7 +44,7 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
 
   Timer? _timer;
 
-  // 🔔 Notification helper
+  //  Notification helper
   Future<void> _showNotification(String title, String body) async {
     const androidDetails = AndroidNotificationDetails(
       'focus_channel',
@@ -64,7 +64,7 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
     );
   }
 
-  // ⏱️ ANDROID-LIKE MANUAL TIME SET
+  //  ANDROID-LIKE MANUAL TIME SET
   void setFocusDuration(int minutes) {
     if (state.isRunning) return;
 
@@ -75,7 +75,7 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
     );
   }
 
-  // ▶️ START TIMER
+  //  START TIMER
   void start() {
     if (state.isRunning) return;
 
@@ -92,13 +92,13 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
     });
   }
 
-  // ⏸️ PAUSE TIMER
+  //  PAUSE TIMER
   void pause() {
     _timer?.cancel();
     state = state.copyWith(isRunning: false);
   }
 
-  // ⏹️ RESET TIMER
+  //  RESET TIMER
   void reset() {
     _timer?.cancel();
     state = PomodoroState(
@@ -109,7 +109,7 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
     );
   }
 
-  // 🔁 SESSION SWITCH LOGIC + NOTIFICATION
+  //  SESSION SWITCH LOGIC + NOTIFICATION
   void _onSessionComplete() async {
     _timer?.cancel();
 
