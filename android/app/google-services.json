@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "600208161651",
+    "project_id": "smartflow-37390",
+    "storage_bucket": "smartflow-37390.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600208161651:android:c9e83c7ccbb45a6d7e2306",
+        "android_client_info": {
+          "package_name": "com.example.smartflow_todo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbeyGnN9v4LstM2zubWrGWqP_oPOyN4bk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

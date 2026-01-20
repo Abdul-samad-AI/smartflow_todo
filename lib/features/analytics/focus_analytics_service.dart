@@ -1,8 +1,7 @@
 import '../../data/models/task_model.dart';
 
-/// ------------------------------
+
 /// ANALYTICS DATA MODEL
-/// ------------------------------
 class FocusAnalytics {
   // EXISTING (used by UI)
   final int completed;
@@ -28,9 +27,8 @@ class FocusAnalytics {
   });
 }
 
-/// ------------------------------
 /// ANALYTICS ENGINE
-/// ------------------------------
+
 class FocusAnalyticsService {
   static FocusAnalytics calculate(List<TaskModel> tasks) {
     final completedTasks = tasks.where((t) => t.isCompleted).toList();
@@ -43,16 +41,15 @@ class FocusAnalyticsService {
         .where((t) => t.difficulty == TaskDifficulty.hard)
         .length;
 
-    // ------------------------------
-    // 1️⃣ FOCUS CONSISTENCY
-    // ------------------------------
-    // Ratio of completed vs total tasks (FORCED DOUBLE)
+
+    // 1️ FOCUS CONSISTENCY
+    // Ratio of completed vs total tasks
     final double focusConsistency =
         tasks.isEmpty ? 0.0 : completedTasks.length / tasks.length;
 
-    // ------------------------------
-    // 2️⃣ WORK STYLE CLASSIFICATION
-    // ------------------------------
+
+    // 2️ WORK STYLE CLASSIFICATION
+
     final String workStyle;
     if (hardTasks >= 3) {
       workStyle = 'Deep Worker 🧠';
@@ -64,9 +61,8 @@ class FocusAnalyticsService {
       workStyle = 'Light Tasker 🌱';
     }
 
-    // ------------------------------
-    // 3️⃣ WEEKLY MOMENTUM (SIMPLE HEURISTIC)
-    // ------------------------------
+    // 3️ WEEKLY MOMENTUM (SIMPLE HEURISTIC)
+
     final int recentTasks = completedTasks.where((task) {
       final diff = DateTime.now().difference(task.createdAt).inDays;
       return diff <= 7;
@@ -81,9 +77,8 @@ class FocusAnalyticsService {
       weeklyMomentum = -1; // declining
     }
 
-    // ------------------------------
-    // 4️⃣ SMART INSIGHT (UPGRADED)
-    // ------------------------------
+    // 4️ SMART INSIGHT (UPGRADED)
+
     final String insight;
     if (hardTasks >= 3 && focusConsistency >= 0.6) {
       insight = '🧠 You thrive in deep, challenging work';
@@ -97,9 +92,9 @@ class FocusAnalyticsService {
       insight = '🚀 Start with one easy task to build flow';
     }
 
-    // ------------------------------
+
     // FINAL OBJECT (BACKWARD SAFE)
-    // ------------------------------
+
     return FocusAnalytics(
       completed: completedTasks.length,
       highPriority: highPriority,

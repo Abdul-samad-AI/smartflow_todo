@@ -79,7 +79,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
 
             // Priority
             DropdownButtonFormField<TaskPriority>(
-              value: _priority,
+              initialValue: _priority,
               decoration: const InputDecoration(
                 labelText: 'Priority',
                 border: OutlineInputBorder(),
@@ -100,7 +100,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
 
             // Difficulty
             DropdownButtonFormField<TaskDifficulty>(
-              value: _difficulty,
+              initialValue: _difficulty,
               decoration: const InputDecoration(
                 labelText: 'Difficulty',
                 border: OutlineInputBorder(),
