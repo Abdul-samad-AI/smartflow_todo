@@ -212,6 +212,8 @@ class _TaskListScreenState
                     );
                   },
                 ),
+                      
+                const Spacer(),
                 //  LOGOUT BUTTON
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.redAccent),
@@ -236,8 +238,7 @@ class _TaskListScreenState
                     //  Auth state listener will auto-redirect to LoginScreen
                   },
                 ),
-      
-                const Spacer(),
+
       
                 const Text(
                   'SmartFlow helps you work with your energy,\nnot against it.',
