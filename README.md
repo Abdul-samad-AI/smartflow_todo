@@ -34,9 +34,9 @@ This project is designed with **real-world app architecture**, **offline-first p
 ## 🛠️ Tech Stack
 
 * **Frontend:** Flutter (Material 3)
-* **State Management:** (Planned) Riverpod / Bloc
+* **State Management:** Riverpod / Bloc
 * **Local Storage:** Hive
-* **Backend (Planned):** Firebase / Django REST API
+* **Backend:** Firebase / Django REST API
 * **Architecture:** Clean Architecture (Feature-first)
 
 ---
